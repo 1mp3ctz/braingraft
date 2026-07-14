@@ -97,27 +97,30 @@ export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = fal
     }
   }
 
+  const quarantine = (rel, data) => {
+    const abs = path.join(dir, rel);
+    let existing = null;
+    try {
+      existing = fs.readFileSync(abs);
+    } catch { /* new */ }
+    if (existing && sha256(existing) === sha256(data)) {
+      ops.push({ rel, action: 'identical', data: null, size: data.length });
+      return;
+    }
+    ops.push({ rel, action: 'quarantine', data, size: data.length });
+  };
+
   const mcpFile = bundle.files.find((f) => f.path === 'mcp.lock.json');
   if (mcpFile) {
     const text = detokenizeHome(mcpFile.data.toString('utf8'), h);
     notes.mcp = text;
-    ops.push({
-      rel: `${STATE_DIR}/pending-mcp.json`,
-      action: 'quarantine',
-      data: Buffer.from(text, 'utf8'),
-      size: text.length
-    });
+    quarantine(`${STATE_DIR}/pending-mcp.json`, Buffer.from(text, 'utf8'));
   }
 
   const envFile = bundle.files.find((f) => f.path === 'env.example');
   if (envFile) {
     notes.envExample = envFile.data.toString('utf8');
-    ops.push({
-      rel: `${STATE_DIR}/env.example`,
-      action: 'quarantine',
-      data: envFile.data,
-      size: envFile.data.length
-    });
+    quarantine(`${STATE_DIR}/env.example`, envFile.data);
   }
 
   return { ops, skipped, notes };
@@ -222,7 +225,7 @@ export async function graft(file, {
     if (writes.length > 25) process.stdout.write(c.gray(`  … and ${writes.length - 25} more\n`));
   }
 
-  const execs = writes.filter((o) => o.exec);
+  const execs = bundle.observed.filter((o) => o.exec);
   const instructions = bundle.observed.filter((o) => o.instruction);
 
   if (isForeign) {
