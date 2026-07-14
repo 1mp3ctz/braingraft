@@ -1,0 +1,36 @@
+{
+  "name": "claudeport",
+  "version": "0.1.0",
+  "description": "Your Claude Code brain, on every machine. Diagnose what's silently broken, pack it, graft it — safely, reversibly, with zero dependencies.",
+  "type": "module",
+  "bin": {
+    "claudeport": "bin/claudeport.mjs"
+  },
+  "exports": "./src/index.mjs",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/",
+    "doctor": "node bin/claudeport.mjs doctor"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "memory",
+    "sync",
+    "backup",
+    "migration",
+    "dotfiles",
+    "cli"
+  ],
+  "license": "MIT",
+  "private": true
+}

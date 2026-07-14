@@ -1,0 +1,9 @@
+export const NAME = 'claudeport';
+export const DISPLAY = 'Claudeport';
+export const TAGLINE = 'Your Claude Code brain, on every machine.';
+export const VERSION = '0.1.0';
+export const BUNDLE_EXT = '.brain';
+export const HOME_TOKEN = '${CLAUDEPORT_HOME}';
+export const STATE_DIR = '.claudeport';
+export const MAGIC = Buffer.from('CLDPORT', 'latin1');
+export const FORMAT_VERSION = 1;
