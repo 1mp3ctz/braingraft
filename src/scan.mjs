@@ -49,9 +49,10 @@ function isPlaceholder(value) {
 const PLACEHOLDER_CRED = /^(user|username|admin|root|pass|passwd|password|pwd|secret|token|example|test|demo|db|dbuser|dbpass|postgres|mysql|redis|myuser|mypassword|changeme|host|localhost|<[^>]+>|\$\{?[A-Za-z_]|your[-_]?)/i;
 
 function isPlaceholderCred(user, pass) {
-  if (PLACEHOLDER_CRED.test(user) || PLACEHOLDER_CRED.test(pass)) return true;
-  if (pass.includes('${') || pass.includes('<')) return true;
-  if (entropy(pass) < 3.0) return true;
+  if (PLACEHOLDER_CRED.test(pass)) return true;
+  if (pass.includes('${') || pass.includes('<') || pass.includes('%')) return true;
+  if (pass.length < 8) return true;
+  if (entropy(pass) < 2.5) return true;
   return false;
 }
 
