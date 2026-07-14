@@ -227,18 +227,24 @@ export async function graft(file, {
 
   const execs = bundle.observed.filter((o) => o.exec);
   const instructions = bundle.observed.filter((o) => o.instruction);
+  const requestsMcp = (bundle.manifest.locks?.mcp ?? []).length > 0 || Boolean(notes.mcp);
+  const carriesCode = execs.length > 0 || instructions.length > 0 || requestsMcp;
 
-  if (isForeign) {
-    process.stdout.write(`\n${heading('This bundle came from another machine')}\n`);
+  if (carriesCode) {
+    process.stdout.write(`\n${heading(isForeign ? 'This bundle came from another machine' : 'This bundle installs code and instructions')}\n`);
     process.stdout.write(
       `  ${c.red(c.bold('Grafting it is equivalent to running unreviewed code.'))}\n` +
       c.gray(`  ${execs.length} executable file(s) become hooks/scripts Claude Code can run.\n`) +
       c.gray(`  ${instructions.length} instruction file(s) steer the model on every prompt — no scanner can tell a\n`) +
       c.gray('  malicious instruction from a legitimate one.\n') +
+      (isForeign ? c.yellow('  The bundle also claims a different origin machine than this one.\n') : '') +
       `  ${sym.arrow} Read them first: ${c.bold(`claudeport inspect ${path.basename(file)}`)}\n`
     );
     if (apply && !trust) {
-      process.stderr.write(`\n${sym.bad} ${c.red('Refusing to apply a foreign bundle without --trust.')}\n\n`);
+      process.stderr.write(
+        `\n${sym.bad} ${c.red('Refusing to apply without --trust.')} ${c.gray('This bundle runs code and loads instructions on this machine.')}\n` +
+        c.gray(`  If you have reviewed it, re-run with ${c.bold('--trust')}.\n\n`)
+      );
       return 2;
     }
   }
@@ -279,8 +285,8 @@ export async function graft(file, {
     process.stdout.write(c.gray('    Pass --allow-external-links if that is genuinely what you want.\n'));
   }
   if (notes.mcp) {
-    process.stdout.write(`\n  ${sym.warn} ${c.yellow('MCP servers were NOT enabled.')} They are in ${c.bold(`${STATE_DIR}/pending-mcp.json`)}.\n`);
-    process.stdout.write(c.gray('    Review them, then add the ones you trust to settings.json yourself.\n'));
+    process.stdout.write(`\n  ${sym.warn} ${c.yellow('MCP servers, plugins, and marketplaces were NOT enabled.')} They are in ${c.bold(`${STATE_DIR}/pending-mcp.json`)}.\n`);
+    process.stdout.write(c.gray('    Each one runs code or grants a plugin source. Review them, then add the ones you trust to settings.json yourself.\n'));
   }
   if (notes.envExample) {
     process.stdout.write(`  ${sym.info} Redacted values are listed in ${c.bold(`${STATE_DIR}/env.example`)} — set them as environment variables.\n`);

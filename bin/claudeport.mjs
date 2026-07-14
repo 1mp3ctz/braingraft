@@ -90,6 +90,12 @@ async function main() {
         process.stderr.write(`${sym.bad} a passphrase is required with --encrypt\n`);
         return 1;
       }
+      if (passphrase) {
+        const { passphraseWarnings } = await import('../src/crypto.mjs');
+        for (const w of passphraseWarnings(passphrase)) {
+          process.stderr.write(`${sym.warn} ${c.yellow(`weak passphrase: ${w}`)}\n`);
+        }
+      }
       return pack({
         out: flags.out,
         encrypt: Boolean(flags.encrypt),

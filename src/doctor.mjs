@@ -13,7 +13,7 @@ export function collect({ dir = claudeDir(), h = home() } = {}) {
   if (!exists) return { exists: false, dir };
 
   const { entries, skipped } = walk(dir, {
-    prunePath: (rel) => /^projects\/[^/]+\/(?!memory$)/.test(rel)
+    prunePath: (rel) => /^projects\/[^/]+\/(?!memory(\/|$))/.test(rel)
   });
 
   const buckets = {

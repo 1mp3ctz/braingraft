@@ -3,10 +3,12 @@ import path from 'node:path';
 import { encodeProjectDir, home } from './env.mjs';
 import { dirSize } from './walk.mjs';
 
-const HOME_SCOPE_RE = /^(?:[A-Za-z]-)?-(?:Users|home|root)-[^-]+(?:-[^-]+)?$/;
+const HOME_SCOPE_RE = /^(?:[A-Za-z]-)?-(?:Users|home)-[^-]+(?:-[^-]+){0,2}$/;
+const ROOT_RE = /^-root$/;
 
-export function isHomeScopeNamespace(ns) {
-  return HOME_SCOPE_RE.test(ns);
+export function isHomeScopeNamespace(ns, h = home()) {
+  if (ns === activeNamespace(h)) return true;
+  return HOME_SCOPE_RE.test(ns) || ROOT_RE.test(ns);
 }
 
 export function guessOsOf(ns) {
@@ -104,12 +106,12 @@ export function diagnose(claudeDir, h = home()) {
   };
 }
 
-export function memoryScopeOf(ns) {
-  return isHomeScopeNamespace(ns) ? 'home' : 'raw';
+export function memoryScopeOf(ns, h = home()) {
+  return isHomeScopeNamespace(ns, h) ? 'home' : 'raw';
 }
 
-export function bundlePathFor(ns, rel) {
-  return memoryScopeOf(ns) === 'home' ? `memory/home/${rel}` : `memory/raw/${ns}/${rel}`;
+export function bundlePathFor(ns, rel, h = home()) {
+  return memoryScopeOf(ns, h) === 'home' ? `memory/home/${rel}` : `memory/raw/${ns}/${rel}`;
 }
 
 export function landingPathFor(bundlePath, h = home()) {

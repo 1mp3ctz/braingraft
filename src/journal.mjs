@@ -49,31 +49,14 @@ export class Transaction {
     this.ops.push(op);
   }
 
-  resolveDest(rel) {
-    const direct = safeJoin(this.claudeDir, rel);
-    let st;
-    try {
-      st = fs.lstatSync(direct);
-    } catch {
-      return { dest: direct, throughLink: false, external: false };
-    }
-    if (!st.isSymbolicLink()) return { dest: direct, throughLink: false, external: false };
-
-    let real;
-    try {
-      real = fs.realpathSync(direct);
-    } catch {
-      return { dest: direct, throughLink: false, external: false, danglingLink: true };
-    }
-    const root = fs.realpathSync(this.claudeDir);
-    const inside = real === root || real.startsWith(root + path.sep);
-    return { dest: real, throughLink: true, external: !inside };
-  }
-
   linkAwareDest(rel) {
     const parts = rel.split('/');
+    const root = fs.realpathSync(this.claudeDir);
+    const insideRoot = (p) => p === root || p.startsWith(root + path.sep);
     let current = this.claudeDir;
-    for (let i = 0; i < parts.length - 1; i += 1) {
+
+    for (let i = 0; i < parts.length; i += 1) {
+      const isLeaf = i === parts.length - 1;
       const next = path.join(current, parts[i]);
       let st;
       try {
@@ -89,10 +72,8 @@ export class Transaction {
         } catch {
           return { dest: safeJoin(this.claudeDir, rel), throughLink: false, external: false, dangling: true };
         }
-        const root = fs.realpathSync(this.claudeDir);
-        const inside = real === root || real.startsWith(root + path.sep);
-        const dest = path.join(real, ...parts.slice(i + 1));
-        return { dest, throughLink: true, external: !inside };
+        const dest = isLeaf ? real : path.join(real, ...parts.slice(i + 1));
+        return { dest, throughLink: true, external: !insideRoot(real) };
       }
       current = next;
     }
@@ -201,6 +182,10 @@ export function undo(claudeDir) {
   journal.status = 'undone';
   journal.undoneAt = new Date().toISOString();
   writeJournal(claudeDir, journal);
+
+  try {
+    fs.rmSync(path.join(stateDir(claudeDir), 'stage', journal.id), { recursive: true, force: true });
+  } catch { /* best effort */ }
 
   return { restored, removed, failed, id: journal.id };
 }

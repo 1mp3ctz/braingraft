@@ -5,7 +5,7 @@ import { BUNDLE_EXT, STATE_DIR } from './brand.mjs';
 import { claudeDir, home } from './env.mjs';
 import { build } from './pack.mjs';
 import { seal } from './container.mjs';
-import { pack as tarPack } from './tar.mjs';
+import { pack as tarPack, validateEntries } from './tar.mjs';
 import { MANIFEST_PATH } from './manifest.mjs';
 import { summarize } from './scan.mjs';
 import { graft } from './graft.mjs';
@@ -194,13 +194,29 @@ export async function pull({ remote = null, apply = false, yes = false, trust = 
     return 1;
   }
 
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  const files = manifest.entries
-    .filter((e) => e.type === 'file')
-    .map((e) => {
-      const abs = path.join(repo, BRAIN_SUBDIR, e.path);
-      return { path: e.path, type: 'file', data: fs.readFileSync(abs), mode: 0o644 };
-    });
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch {
+    process.stderr.write(`${sym.bad} the synced manifest is not valid JSON — the remote may be corrupted\n`);
+    return 1;
+  }
+
+  const brainRoot = path.resolve(repo, BRAIN_SUBDIR);
+  const files = [];
+  for (const e of manifest.entries.filter((entry) => entry.type === 'file')) {
+    const pathErrors = validateEntries([{ path: e.path }]);
+    if (pathErrors.length) {
+      process.stderr.write(`${sym.bad} ${c.red('unsafe path in synced manifest — refusing')}: ${e.path}\n`);
+      return 2;
+    }
+    const abs = path.resolve(brainRoot, e.path);
+    if (abs !== brainRoot && !abs.startsWith(brainRoot + path.sep)) {
+      process.stderr.write(`${sym.bad} ${c.red('path escapes the synced brain root — refusing')}: ${e.path}\n`);
+      return 2;
+    }
+    files.push({ path: e.path, type: 'file', data: fs.readFileSync(abs), mode: 0o644 });
+  }
 
   const tarBuffer = tarPack([
     { path: MANIFEST_PATH, type: 'file', data: Buffer.from(JSON.stringify(manifest, null, 2), 'utf8'), mode: 0o644 },

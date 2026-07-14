@@ -10,13 +10,13 @@ export const LOCAL_KEYS = new Set([
 ]);
 
 export const SHARED_KEYS = new Set([
-  'hooks', 'permissions', 'enabledPlugins', 'extraKnownMarketplaces', 'disabledSkills',
+  'hooks', 'permissions', 'disabledSkills', 'enableAllProjectMcpServers',
   'skillListingBudgetFraction', 'includeCoAuthoredBy', 'cleanupPeriodDays', 'outputStyle',
-  'alwaysThinkingEnabled', 'spinnerTipsEnabled'
+  'alwaysThinkingEnabled', 'spinnerTipsEnabled', 'disabledMcpjsonServers', 'enabledMcpjsonServers'
 ]);
 
 export const REDACT_KEYS = new Set(['env']);
-export const QUARANTINE_KEYS = new Set(['mcpServers']);
+export const QUARANTINE_KEYS = new Set(['mcpServers', 'enabledPlugins', 'extraKnownMarketplaces']);
 
 const SECRETISH = /(key|token|secret|auth|password|passwd|credential|cookie|session)/i;
 
@@ -191,12 +191,6 @@ export function mergeSettings(target = {}, incoming = {}) {
     if (key === 'disabledSkills') {
       merged.disabledSkills = unionArray(target.disabledSkills, value);
       report.push({ key, action: 'union' });
-      continue;
-    }
-
-    if (key === 'enabledPlugins' || key === 'extraKnownMarketplaces') {
-      merged[key] = { ...(value ?? {}), ...(target[key] ?? {}) };
-      report.push({ key, action: 'union-target-wins' });
       continue;
     }
 

@@ -21,6 +21,8 @@ export const RULES = [
 ];
 
 const ASSIGNMENT = /(?:^|[\s,{"'])((?:[A-Za-z0-9_]*(?:api[_-]?key|apikey|secret|token|password|passwd|credential|auth)[A-Za-z0-9_]*))\s*["']?\s*[:=]\s*["']([^"'\n]{20,})["']/gi;
+const CLI_FLAG_SECRET = /["']--?(?:api[_-]?key|apikey|secret|token|password|auth|bearer)["']\s*,\s*["']([^"'\n\s]{20,})["']/gi;
+const STRONG_SECRET_NAME = /(api[_-]?key|apikey|secret|token|password|passwd|credential|private[_-]?key)/i;
 
 export function entropy(str) {
   const freq = new Map();
@@ -71,14 +73,32 @@ export function scanText(rel, text) {
     const [, key, value] = a;
     if (isPlaceholder(value)) continue;
     if (value.includes('${')) continue;
-    if (entropy(value) < 3.2) continue;
+    if (entropy(value) < 3.0) continue;
     if (/\s/.test(value)) continue;
+    const named = STRONG_SECRET_NAME.test(key);
     findings.push({
       file: rel,
       line: lineOf(text, a.index),
-      rule: 'high-entropy-assignment',
-      label: `${key} = high-entropy literal`,
-      level: WARN,
+      rule: named ? 'named-secret-assignment' : 'high-entropy-assignment',
+      label: `${key} = ${named ? 'secret-named value' : 'high-entropy literal'}`,
+      level: named ? BLOCK : WARN,
+      excerpt: redact(value)
+    });
+    if (findings.length > 200) break;
+  }
+
+  CLI_FLAG_SECRET.lastIndex = 0;
+  let f;
+  while ((f = CLI_FLAG_SECRET.exec(text)) !== null) {
+    const value = f[1];
+    if (isPlaceholder(value) || value.includes('${')) continue;
+    if (entropy(value) < 3.0) continue;
+    findings.push({
+      file: rel,
+      line: lineOf(text, f.index),
+      rule: 'secret-cli-argument',
+      label: 'secret passed as a command-line argument',
+      level: BLOCK,
       excerpt: redact(value)
     });
     if (findings.length > 200) break;
