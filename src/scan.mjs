@@ -14,8 +14,8 @@ export const RULES = [
   { id: 'stripe-key', level: BLOCK, re: /sk_(?:live|test)_[A-Za-z0-9]{16,}/g, label: 'Stripe secret key' },
   { id: 'gitlab-token', level: BLOCK, re: /glpat-[A-Za-z0-9_-]{20,}/g, label: 'GitLab token' },
   { id: 'private-key', level: BLOCK, re: /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/g, label: 'private key block' },
-  { id: 'creds-in-url', level: BLOCK, re: /[a-z][a-z0-9+.-]*:\/\/[^\s/:@"']+:[^\s/@"']+@[^\s"']+/gi, label: 'credentials embedded in a URL' },
-  { id: 'token-in-url', level: BLOCK, re: /https?:\/\/(?:gh[pousr]_|github_pat_)[^\s@"']+@[^\s"']+/g, label: 'token embedded in a git URL' },
+  { id: 'creds-in-url', level: BLOCK, re: /[a-z][a-z0-9+.-]*:\/\/([^\s/:@"']+):([^\s/@"']+)@[^\s"']+/gi, label: 'credentials embedded in a URL', urlCreds: true },
+  { id: 'token-in-url', level: BLOCK, re: /https?:\/\/(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})@[^\s"']+/g, label: 'token embedded in a git URL' },
   { id: 'jwt', level: WARN, re: /eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, label: 'JWT' },
   { id: 'bearer', level: WARN, re: /\b[Bb]earer\s+[A-Za-z0-9._~+/-]{20,}=*/g, label: 'bearer token' }
 ];
@@ -46,6 +46,15 @@ function isPlaceholder(value) {
   return PLACEHOLDER.test(value.trim()) || /^\*+$/.test(value.trim());
 }
 
+const PLACEHOLDER_CRED = /^(user|username|admin|root|pass|passwd|password|pwd|secret|token|example|test|demo|db|dbuser|dbpass|postgres|mysql|redis|myuser|mypassword|changeme|host|localhost|<[^>]+>|\$\{?[A-Za-z_]|your[-_]?)/i;
+
+function isPlaceholderCred(user, pass) {
+  if (PLACEHOLDER_CRED.test(user) || PLACEHOLDER_CRED.test(pass)) return true;
+  if (pass.includes('${') || pass.includes('<')) return true;
+  if (entropy(pass) < 3.0) return true;
+  return false;
+}
+
 export function scanText(rel, text) {
   const findings = [];
 
@@ -55,6 +64,7 @@ export function scanText(rel, text) {
     while ((m = rule.re.exec(text)) !== null) {
       const value = m[0];
       if (isPlaceholder(value)) continue;
+      if (rule.urlCreds && isPlaceholderCred(m[1] ?? '', m[2] ?? '')) continue;
       findings.push({
         file: rel,
         line: lineOf(text, m.index),
