@@ -1,0 +1,12 @@
+# Copy to ~/.claude/.claudeportignore to exclude extra paths from your bundle.
+# One glob per line. Matches are relative to your Claude config dir.
+# Leading slashes and either separator work; **=any depth, *=one segment.
+
+# Example: keep a private, machine-specific skill out of every bundle
+# /skills/my-local-only-skill
+
+# Example: exclude a whole directory
+# rules/experimental/**
+
+# Example: a single note you never want to travel
+# /agents/scratch.md

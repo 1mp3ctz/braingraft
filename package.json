@@ -18,7 +18,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test",
     "doctor": "node bin/claudeport.mjs doctor"
   },
   "keywords": [
