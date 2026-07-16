@@ -116,7 +116,7 @@ export function render(result) {
         '  See anthropics/claude-code#25739.'
       )
     );
-    lines.push(`  ${sym.arrow} Fix it: ${c.bold('claudeport pack')} on the source machine, ${c.bold('claudeport graft')} here.`);
+    lines.push(`  ${sym.arrow} Fix it: ${c.bold('braingraft pack')} on the source machine, ${c.bold('braingraft graft')} here.`);
   } else if (memory.activeExists) {
     lines.push('');
     lines.push(`  ${sym.ok} All memory on this disk is in the namespace Claude actually reads.`);
@@ -170,7 +170,7 @@ export function render(result) {
         result.foreignPaths.slice(0, 10).map((f) => [sym.warn, c.gray(f.file), f.path])
       )
     );
-    lines.push(c.gray('  These point at another machine\'s filesystem. Claudeport reports them; it will not silently rewrite them.'));
+    lines.push(c.gray('  These point at another machine\'s filesystem. Braingraft reports them; it will not silently rewrite them.'));
   }
 
   lines.push('');

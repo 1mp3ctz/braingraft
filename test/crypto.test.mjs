@@ -97,5 +97,5 @@ test('refuses to open an encrypted bundle with no passphrase', () => {
 });
 
 test('rejects a file that is not a bundle', () => {
-  assert.throws(() => open(Buffer.from('not a bundle at all')), /not a claudeport bundle/);
+  assert.throws(() => open(Buffer.from('not a bundle at all')), /not a braingraft bundle/);
 });

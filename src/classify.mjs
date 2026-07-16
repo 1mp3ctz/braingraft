@@ -18,7 +18,8 @@ const SECRET_FILES = [
 
 const BRAIN_ROOT_FILES = [
   'CLAUDE.md', 'AGENTS.md', 'settings.json', 'marketplace.json', 'plugin.json',
-  'keybindings.json', 'output-styles.json', '.claudeportrc', '.claudeportignore'
+  'keybindings.json', 'output-styles.json',
+  '.braingraftrc', '.braingraftignore', '.claudeportrc', '.claudeportignore'
 ];
 
 const BRAIN_DIRS = [
@@ -39,7 +40,7 @@ const LOCAL_DIRS = [
   'jobs', 'cache', 'backups', 'file-history', 'shell-snapshots', 'sessions',
   'session-data', 'session-env', 'paste-cache', 'image-cache', 'downloads',
   'plugins', 'ide', 'daemon', 'metrics', 'telemetry', 'statsig', 'todos',
-  'tasks', 'plans', 'homunculus', '.git', '.claudeport', 'ecc'
+  'tasks', 'plans', 'homunculus', '.git', '.braingraft', '.claudeport', 'ecc'
 ];
 
 const MEMORY_RE = /^projects\/([^/]+)\/memory(\/|$)/;

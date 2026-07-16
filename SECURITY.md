@@ -1,10 +1,10 @@
 # Security & Threat Model
 
-Claudeport moves your Claude Code configuration between machines. That makes it security-sensitive in two directions: what leaves your machine when you **pack**, and what runs on your machine when you **graft**. This document is the honest account of both.
+Braingraft moves your Claude Code configuration between machines. That makes it security-sensitive in two directions: what leaves your machine when you **pack**, and what runs on your machine when you **graft**. This document is the honest account of both.
 
 ## Reporting a vulnerability
 
-Open a [private security advisory](https://github.com/1mp3ctz/claudeport/security/advisories/new) on GitHub, or email the maintainer. Please do not open a public issue for a vulnerability until it has a fix.
+Open a [private security advisory](https://github.com/1mp3ctz/braingraft/security/advisories/new) on GitHub, or email the maintainer. Please do not open a public issue for a vulnerability until it has a fix.
 
 ## What a bundle is
 
@@ -33,7 +33,7 @@ Conversation transcripts (`history.jsonl`, `projects/**/*.jsonl`) are classified
 ### Secret scanning (a second layer, not the first)
 A scanner flags key-shaped secrets (Anthropic, OpenAI, GitHub, AWS, Slack, Google, Stripe, GitLab, private-key blocks, secret-named assignments, secrets passed as CLI arguments) and **blocks the pack** when it finds one, with a precise `file:line`. This is a backstop; the structural redaction above is what actually protects you.
 
-**Honest limitation:** a regex/entropy scanner cannot catch every secret. A high-entropy value with no recognizable name, a secret split across lines, or an encoded blob can slip past it. Store secrets in environment variables, not in your config files, and review `claudeport doctor` output before packing.
+**Honest limitation:** a regex/entropy scanner cannot catch every secret. A high-entropy value with no recognizable name, a secret split across lines, or an encoded blob can slip past it. Store secrets in environment variables, not in your config files, and review `braingraft doctor` output before packing.
 
 ### Memory is prose about your life
 Your memory files are the most sensitive thing in the bundle and no scanner can redact them — they are natural-language notes you wrote. `pack` prints the human-readable files that are about to leave your machine and asks for confirmation. Use `--no-memory` to pack configuration only.
@@ -45,7 +45,7 @@ Packing never modifies the source directory. The directory walk uses `lstat` and
 
 **Grafting a bundle is equivalent to running unreviewed code.** It writes hook scripts Claude Code executes, skills and `CLAUDE.md` that steer the model on every prompt, and it can request MCP servers that launch subprocesses. No content scanner can distinguish a malicious natural-language instruction from a legitimate one. Treat a `.brain` from someone else exactly as you would treat running their shell script.
 
-Claudeport's mitigations:
+Braingraft's mitigations:
 
 ### Extraction is hardened
 Before any byte is written, the entire entry set is validated. Rejected outright:
@@ -65,10 +65,10 @@ Decompression is capped by total bytes, entry count, and per-entry size to defea
 A bundle that carries executables, instruction files, or MCP requests **cannot be applied without `--trust`**. This requirement is derived from the archive's real contents, not from a self-declared "origin" field a bundle author controls.
 
 ### Writes are reversible
-`graft --apply` stages every write, records a journal (with a pre-write snapshot of anything it overwrites), then commits. `claudeport undo` replays the journal in reverse and restores the machine byte-for-byte. An interrupted graft is detected on the next run.
+`graft --apply` stages every write, records a journal (with a pre-write snapshot of anything it overwrites), then commits. `braingraft undo` replays the journal in reverse and restores the machine byte-for-byte. An interrupted graft is detected on the next run.
 
 ### Symlinks are written through, never replaced
-If a destination path is a symlink (for example, a memory directory managed as a junction), Claudeport writes **through** it into the real target — it never replaces the link, which would silently fork your brain into two divergent copies. A link that resolves outside your Claude directory is refused unless you pass `--allow-external-links`.
+If a destination path is a symlink (for example, a memory directory managed as a junction), Braingraft writes **through** it into the real target — it never replaces the link, which would silently fork your brain into two divergent copies. A link that resolves outside your Claude directory is refused unless you pass `--allow-external-links`.
 
 ## Encryption
 
@@ -82,6 +82,6 @@ Encryption is not a substitute for the allowlist: a bundle is designed to be saf
 
 **Remote URLs are transport-restricted.** Every remote — for `push` *and* `pull` — is validated against a scheme allowlist (`https://`, `ssh://`, `git@host:`) before it ever reaches `git`, and every `git` subprocess runs with `protocol.ext`/`protocol.fd` disabled and `GIT_ALLOW_PROTOCOL=https:ssh:git`. This closes git's `ext::`/`fd::` remote-helper transports, which would otherwise let a crafted `--remote` value execute an arbitrary command the moment git touched it. A malicious "pull my brain" one-liner cannot run code on your machine.
 
-## What Claudeport is not
+## What Braingraft is not
 
 It is not a sandbox and it does not vet the *intent* of instructions or hooks. It reduces the ways a bundle can surprise you and makes every change reversible; it cannot make an untrusted brain safe to run blindly. Read what you graft.

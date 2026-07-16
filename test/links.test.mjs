@@ -122,7 +122,7 @@ test("an interrupted graft is detected and can be rolled back", async () => {
     tx.add({ rel: 'skills/new/SKILL.md', action: 'create', data: Buffer.from('new') });
     tx.commit();
 
-    const journalPath = path.join(fx.dir, '.claudeport', 'journal.json');
+    const journalPath = path.join(fx.dir, '.braingraft', 'journal.json');
     const journal = JSON.parse(fs.readFileSync(journalPath, 'utf8'));
     assert.equal(journal.status, 'committed');
     assert.equal(journal.ops[0].done, true);

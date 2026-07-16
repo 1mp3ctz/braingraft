@@ -19,7 +19,7 @@ export function seal({ tarBuffer, passphrase = null, manifestDigest }) {
 
   const header = {
     format: FORMAT_VERSION,
-    tool: `claudeport/${VERSION}`,
+    tool: `braingraft/${VERSION}`,
     created: new Date().toISOString(),
     manifestDigest,
     encrypted: Boolean(passphrase),
@@ -47,8 +47,8 @@ export function seal({ tarBuffer, passphrase = null, manifestDigest }) {
 }
 
 export function readHeader(buf) {
-  if (buf.length < MAGIC.length + 1 + HEADER_LEN_BYTES) throw new Error('not a claudeport bundle');
-  if (!buf.subarray(0, MAGIC.length).equals(MAGIC)) throw new Error('not a claudeport bundle');
+  if (buf.length < MAGIC.length + 1 + HEADER_LEN_BYTES) throw new Error('not a braingraft bundle');
+  if (!buf.subarray(0, MAGIC.length).equals(MAGIC)) throw new Error('not a braingraft bundle');
 
   const format = buf[MAGIC.length];
   if (format !== FORMAT_VERSION) throw new Error(`unsupported bundle format v${format}`);

@@ -13,7 +13,7 @@ export function digestOf(manifest) {
 export function buildManifest({ origin, entries, settings, locks, findings, notes }) {
   const manifest = {
     format: 1,
-    tool: `claudeport/${VERSION}`,
+    tool: `braingraft/${VERSION}`,
     created: new Date().toISOString(),
     origin,
     entries,

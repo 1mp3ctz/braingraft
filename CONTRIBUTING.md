@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking. Claudeport is deliberately small and dependency-free — please keep it that way.
+Thanks for looking. Braingraft is deliberately small and dependency-free — please keep it that way.
 
 ## Ground rules
 
@@ -18,7 +18,7 @@ npm test        # node --test, no install needed
 ## Layout
 
 ```
-bin/claudeport.mjs   CLI entry, arg parsing, dispatch
+bin/braingraft.mjs   CLI entry, arg parsing, dispatch
 src/doctor.mjs       read-only diagnosis
 src/pack.mjs         build a bundle (allowlist, redaction, tokenizing)
 src/inspect.mjs      verify a bundle from its bytes

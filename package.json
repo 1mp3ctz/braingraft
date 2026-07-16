@@ -1,10 +1,11 @@
 {
-  "name": "claudeport",
-  "version": "0.1.0",
-  "description": "Your Claude Code brain, on every machine. Diagnose what's silently broken, pack it, graft it — safely, reversibly, with zero dependencies.",
+  "name": "braingraft",
+  "version": "0.2.0",
+  "description": "Your Claude Code brain, on every machine. Diagnose what's silently broken, pack it, graft it — safely, reversibly, zero dependencies.",
   "type": "module",
   "bin": {
-    "claudeport": "bin/claudeport.mjs"
+    "braingraft": "bin/braingraft.mjs",
+    "claudeport": "bin/braingraft.mjs"
   },
   "exports": "./src/index.mjs",
   "engines": {
@@ -15,11 +16,12 @@
     "src/",
     "README.md",
     "SECURITY.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "node --test",
-    "doctor": "node bin/claudeport.mjs doctor"
+    "doctor": "node bin/braingraft.mjs doctor"
   },
   "keywords": [
     "claude",
@@ -35,11 +37,11 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/1mp3ctz/claudeport.git"
+    "url": "git+https://github.com/1mp3ctz/braingraft.git"
   },
-  "homepage": "https://github.com/1mp3ctz/claudeport#readme",
+  "homepage": "https://github.com/1mp3ctz/braingraft#readme",
   "bugs": {
-    "url": "https://github.com/1mp3ctz/claudeport/issues"
+    "url": "https://github.com/1mp3ctz/braingraft/issues"
   },
   "author": "Viktor (https://github.com/1mp3ctz)"
 }

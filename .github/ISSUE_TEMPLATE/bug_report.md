@@ -10,14 +10,14 @@ labels: bug
 
 **Steps to reproduce**
 ```
-$ npx claudeport ...
+$ npx braingraft ...
 ```
 
-**Output of `claudeport doctor --json`** (redact anything sensitive)
+**Output of `braingraft doctor --json`** (redact anything sensitive)
 ```json
 ```
 
 **Environment**
 - OS + version:
 - `node --version`:
-- `claudeport --version`:
+- `braingraft --version`:

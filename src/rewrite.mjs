@@ -1,8 +1,8 @@
-import { HOME_TOKEN } from './brand.mjs';
+import { HOME_TOKEN, LEGACY_HOME_TOKEN } from './brand.mjs';
 import { isExecutable } from './classify.mjs';
 
 const TEXT_EXT = /\.(md|markdown|json|jsonc|sh|bash|zsh|ps1|bat|cmd|py|rb|pl|mjs|cjs|js|ts|tsx|jsx|toml|yaml|yml|txt|css|html|xml|ini|cfg|rc|env\.example)$/i;
-const TEXT_BASENAMES = new Set(['CLAUDE.md', 'AGENTS.md', '.claudeportrc', '.claudeportignore', '.gitignore']);
+const TEXT_BASENAMES = new Set(['CLAUDE.md', 'AGENTS.md', '.braingraftrc', '.braingraftignore', '.claudeportrc', '.claudeportignore', '.gitignore']);
 
 export function isTextPath(rel) {
   const base = rel.split('/').pop();
@@ -43,7 +43,7 @@ export function tokenizeHome(text, home) {
 
 export function detokenizeHome(text, targetHome) {
   const posix = targetHome.replace(/\\/g, '/').replace(/\/+$/, '');
-  return text.split(HOME_TOKEN).join(posix);
+  return text.split(HOME_TOKEN).join(posix).split(LEGACY_HOME_TOKEN).join(posix);
 }
 
 const FOREIGN_ABS = /(?:^|["'\s=:(,])((?:[A-Za-z]:[\\/]|\/Users\/|\/home\/|\/Volumes\/|\/mnt\/|\/opt\/|\/srv\/)[^\s"',)]{2,})/g;
@@ -54,7 +54,7 @@ export function findForeignPaths(text) {
   FOREIGN_ABS.lastIndex = 0;
   while ((m = FOREIGN_ABS.exec(text)) !== null) {
     const p = m[1];
-    if (p.includes(HOME_TOKEN)) continue;
+    if (p.includes(HOME_TOKEN) || p.includes(LEGACY_HOME_TOKEN)) continue;
     out.push(p);
   }
   return [...new Set(out)];

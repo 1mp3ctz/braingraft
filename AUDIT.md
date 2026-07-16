@@ -17,8 +17,8 @@ What does *not* ship anywhere: a tool that tells you **your memory is silently n
 
 → **`doctor` is the headline, not a utility.** It is read-only, it can't destroy anything, and its output is the shareable artifact. `pack`/`graft`/`sync` are the fix you earn the right to offer *after* the diagnosis lands.
 
-### 2. Renamed: Mindmeld → **Claudeport** (market)
-Cisco MindMeld is a live trademark in the same goods class; npm's trademark policy lets them force a rename with one email — after launch, after the links point at it. And you can never outrank Cisco + Star Trek in search. `claudeport` is free on npm, carries the keyword people actually search, and says what it does. (Rename cost is one constant: `src/brand.mjs`.)
+### 2. Renamed: Mindmeld → **Braingraft** (market)
+Cisco MindMeld is a live trademark in the same goods class; npm's trademark policy lets them force a rename with one email — after launch, after the links point at it. And you can never outrank Cisco + Star Trek in search. `braingraft` is free on npm, carries the keyword people actually search, and says what it does. (Rename cost is one constant: `src/brand.mjs`.)
 
 ### 3. The walker must not follow symlinks — the memory dir *is* one (architecture)
 `~/.claude/projects/C--Users-bob/memory` on this machine is a **junction** to `projects/-Users-alice/memory`. A naive `readdir` walk either misses it, follows it into a 169 MB repo (`skills/gstack` is also a symlink), or grafts it as a *real* directory — instantly forking the brain into two divergent copies. That is the exact failure the product exists to prevent.

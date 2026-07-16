@@ -5,7 +5,7 @@ import { toPosix } from './env.mjs';
 export const PRUNE_DIRS = new Set([
   'jobs', 'cache', 'plugins', 'node_modules', '.git', 'shell-snapshots', 'file-history',
   'backups', 'downloads', 'ide', 'paste-cache', 'image-cache', 'todos', 'statsig',
-  'session-env', 'daemon', 'telemetry', '.claudeport', 'tasks'
+  'session-env', 'daemon', 'telemetry', '.braingraft', '.claudeport', 'tasks'
 ]);
 
 const MAX_ENTRIES = 200000;

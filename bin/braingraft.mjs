@@ -35,10 +35,10 @@ ${c.bold('FLAGS')}
   --allow-external-links     Write through symlinks that leave your Claude dir.
 
 ${c.bold('EXAMPLES')}
-  ${c.gray('$')} npx claudeport doctor
-  ${c.gray('$')} npx claudeport pack --encrypt -o brain.brain
-  ${c.gray('$')} npx claudeport inspect brain.brain
-  ${c.gray('$')} npx claudeport graft brain.brain --apply
+  ${c.gray('$')} npx braingraft doctor
+  ${c.gray('$')} npx braingraft pack --encrypt -o brain.brain
+  ${c.gray('$')} npx braingraft inspect brain.brain
+  ${c.gray('$')} npx braingraft graft brain.brain --apply
 
 Claude directory: ${c.gray(claudeDir())}
 `;
@@ -109,7 +109,7 @@ async function main() {
     case 'inspect': {
       const file = positional[1];
       if (!file) {
-        process.stderr.write(`${sym.bad} usage: claudeport inspect <file>\n`);
+        process.stderr.write(`${sym.bad} usage: braingraft inspect <file>\n`);
         return 1;
       }
       return inspect(file, { passphrase: await maybePassphrase(file), json });
@@ -118,7 +118,7 @@ async function main() {
     case 'graft': {
       const file = positional[1];
       if (!file) {
-        process.stderr.write(`${sym.bad} usage: claudeport graft <file> [--apply]\n`);
+        process.stderr.write(`${sym.bad} usage: braingraft graft <file> [--apply]\n`);
         return 1;
       }
       return graft(file, {
@@ -170,7 +170,7 @@ async function main() {
           yes
         });
       }
-      process.stderr.write(`${sym.bad} usage: claudeport sync push|pull [--remote <git-url>]\n`);
+      process.stderr.write(`${sym.bad} usage: braingraft sync push|pull [--remote <git-url>]\n`);
       return 1;
     }
 

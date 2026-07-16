@@ -64,7 +64,7 @@ export async function remoteVisibility(remote) {
   if (!gh) return { host: 'other', visibility: 'unknown' };
   try {
     const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}`, {
-      headers: { accept: 'application/vnd.github+json', 'user-agent': 'claudeport' }
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'braingraft' }
     });
     if (res.status === 200) return { host: 'github', visibility: 'public', ...gh };
     if (res.status === 404) return { host: 'github', visibility: 'private-or-missing', ...gh };
@@ -75,7 +75,9 @@ export async function remoteVisibility(remote) {
 }
 
 function repoDir() {
-  return path.join(home(), '.claudeport', 'sync');
+  const legacy = path.join(home(), '.claudeport', 'sync');
+  if (fs.existsSync(path.join(legacy, '.git'))) return legacy;
+  return path.join(home(), '.braingraft', 'sync');
 }
 
 function ensureRepo(remote) {
@@ -106,7 +108,7 @@ export async function push({ remote = null, yes = false, allowUnverifiedRemote =
   const state = readSyncState(dir);
   const target = remote ?? state?.remote;
   if (!target) {
-    process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('claudeport sync push --remote <git-url>')}\n`);
+    process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('braingraft sync push --remote <git-url>')}\n`);
     return 1;
   }
   try {
@@ -135,7 +137,7 @@ export async function push({ remote = null, yes = false, allowUnverifiedRemote =
   if (vis.visibility !== 'private-or-missing' && !allowUnverifiedRemote) {
     process.stderr.write(
       `${sym.bad} ${c.red('Cannot verify that this remote is private')} ${c.gray(`(${vis.host}, ${vis.visibility})`)}.\n` +
-      c.gray('  Claudeport only auto-verifies GitHub. If you are certain it is private, pass --allow-unverified-remote.\n')
+      c.gray('  Braingraft only auto-verifies GitHub. If you are certain it is private, pass --allow-unverified-remote.\n')
     );
     return 2;
   }
@@ -163,7 +165,7 @@ export async function push({ remote = null, yes = false, allowUnverifiedRemote =
   fs.writeFileSync(path.join(repo, MANIFEST_PATH), `${JSON.stringify(manifest, null, 2)}\n`);
   fs.writeFileSync(
     path.join(repo, 'README.md'),
-    `# Claude brain (private)\n\nWritten by [claudeport](https://github.com/1mp3ctz/claudeport). Do not make this repository public.\n\n- files: ${files.length}\n- updated: ${new Date().toISOString()}\n`
+    `# Claude brain (private)\n\nWritten by [braingraft](https://github.com/1mp3ctz/braingraft). Do not make this repository public.\n\n- files: ${files.length}\n- updated: ${new Date().toISOString()}\n`
   );
   fs.writeFileSync(path.join(repo, '.gitignore'), 'incoming*.brain\n');
 
@@ -180,7 +182,7 @@ export async function push({ remote = null, yes = false, allowUnverifiedRemote =
     return 0;
   }
 
-  git(['-c', 'user.name=claudeport', '-c', 'user.email=claudeport@localhost', 'commit', '-q', '-m', `brain: ${new Date().toISOString()}`], repo);
+  git(['-c', 'user.name=braingraft', '-c', 'user.email=braingraft@localhost', 'commit', '-q', '-m', `brain: ${new Date().toISOString()}`], repo);
   git(['push', '-u', 'origin', 'HEAD:main'], repo);
 
   writeSyncState({ remote: target, lastPush: new Date().toISOString(), digest: manifest.digest }, dir);
@@ -202,7 +204,7 @@ export async function pull({ remote = null, apply = false, yes = false, trust = 
   const state = readSyncState(dir);
   const target = remote ?? state?.remote;
   if (!target) {
-    process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('claudeport sync pull --remote <git-url>')}\n`);
+    process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('braingraft sync pull --remote <git-url>')}\n`);
     return 1;
   }
   try {
@@ -223,7 +225,7 @@ export async function pull({ remote = null, apply = false, yes = false, trust = 
 
   const manifestPath = path.join(repo, MANIFEST_PATH);
   if (!fs.existsSync(manifestPath)) {
-    process.stderr.write(`${sym.bad} that remote has no claudeport manifest — is it the right repo?\n`);
+    process.stderr.write(`${sym.bad} that remote has no braingraft manifest — is it the right repo?\n`);
     return 1;
   }
 

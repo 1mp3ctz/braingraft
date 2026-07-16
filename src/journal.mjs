@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { STATE_DIR } from './brand.mjs';
+import { STATE_DIR, LEGACY_STATE_DIR } from './brand.mjs';
 import { sha256 } from './crypto.mjs';
 import { safeJoin } from './tar.mjs';
 
@@ -12,12 +12,17 @@ export function journalPath(claudeDir) {
   return path.join(stateDir(claudeDir), 'journal.json');
 }
 
+function legacyJournalPath(claudeDir) {
+  return path.join(claudeDir, LEGACY_STATE_DIR, 'journal.json');
+}
+
 export function readJournal(claudeDir) {
-  try {
-    return JSON.parse(fs.readFileSync(journalPath(claudeDir), 'utf8'));
-  } catch {
-    return null;
+  for (const p of [journalPath(claudeDir), legacyJournalPath(claudeDir)]) {
+    try {
+      return JSON.parse(fs.readFileSync(p, 'utf8'));
+    } catch { /* try next */ }
   }
+  return null;
 }
 
 function writeJournal(claudeDir, journal) {

@@ -1,4 +1,4 @@
-# Claudeport — Plan v2 (post-audit)
+# Braingraft — Plan v2 (post-audit)
 
 > **Your Claude Code brain, on every machine.**
 > Diagnose what's broken. Pack it. Graft it. Never lose it.
@@ -21,7 +21,7 @@ Copy `~/.claude` to a new machine — with rsync, a dotfiles repo, chezmoi, or a
 
 Tracked upstream as [anthropics/claude-code#25739](https://github.com/anthropics/claude-code/issues/25739) — open, unfixed. Every "sync your Claude config" tool shipped so far copies files and inherits this bug.
 
-**`claudeport doctor` is the only thing that tells you it's happening to you.** Read-only. Cannot break anything. It is the headline.
+**`braingraft doctor` is the only thing that tells you it's happening to you.** Read-only. Cannot break anything. It is the headline.
 
 ---
 
@@ -32,19 +32,19 @@ Tracked upstream as [anthropics/claude-code#25739](https://github.com/anthropics
 | P1 | **Never destroy a brain.** | Writes are staged, journaled, reversible. `graft` is a dry-run unless `--apply`. `undo` restores byte-identically. Snapshot the *write-set*, never the 1.3 GB tree. |
 | P2 | **Never leak a secret.** | Allowlist, not denylist. Structural redaction (not regex) is the control. Credentials are unpackable — no flag overrides it. A privacy gate names every human-readable file before it leaves the machine. |
 | P3 | **A bundle is untrusted input.** | Grafting executes code by design. Extraction is hardened like a tar parser under attack; consent is computed from actual bytes, never from the manifest's claims. |
-| P4 | **Portable by construction.** | Home paths → `${CLAUDEPORT_HOME}` on pack, re-materialized per target OS on graft. Memory namespaces re-encoded for the target machine. Symlinks recorded, never followed. |
+| P4 | **Portable by construction.** | Home paths → `${BRAINGRAFT_HOME}` on pack, re-materialized per target OS on graft. Memory namespaces re-encoded for the target machine. Symlinks recorded, never followed. |
 | P5 | **Zero dependencies, zero telemetry, zero accounts.** | Node stdlib only (`zlib`, `crypto`, `fs`). Plain ESM — no build step, so "auditable in an afternoon" is literally true. Nothing phones home, ever. |
 
 ## 2. Command surface (v1)
 
 | Command | Writes? | Does |
 |---|---|---|
-| `claudeport doctor` | **no** | The diagnosis. Orphaned memory namespaces, classification of every path (brain / local / secret / unknown), sizes, secret findings, non-portable absolute paths, symlinks. |
-| `claudeport pack [-o brain.brain] [--encrypt] [--no-memory]` | no (source read-only) | Portable bundle: allowlisted, structurally redacted, path-tokenized, memory lifted to a logical namespace, per-entry sha256. Refuses on secret findings. |
-| `claudeport inspect <file>` | no | Everything the bundle will do, computed **from the actual bytes**: entries, origin OS, executables, instruction files, mcpServers it wants, checksum, encryption state. |
-| `claudeport graft <file> [--apply]` | only with `--apply` | Dry-run plan by default. Per-file verdict table. Staged writes + journal. `settings.json` merged by key policy. mcpServers/plugins never auto-enabled. |
-| `claudeport undo` | yes | Reverts the last graft from the journal. |
-| `claudeport sync push\|pull [--remote url]` | push: remote; pull: local | Git-backed ongoing sync over the same sanitizer. Hard-refuses a **public** remote. |
+| `braingraft doctor` | **no** | The diagnosis. Orphaned memory namespaces, classification of every path (brain / local / secret / unknown), sizes, secret findings, non-portable absolute paths, symlinks. |
+| `braingraft pack [-o brain.brain] [--encrypt] [--no-memory]` | no (source read-only) | Portable bundle: allowlisted, structurally redacted, path-tokenized, memory lifted to a logical namespace, per-entry sha256. Refuses on secret findings. |
+| `braingraft inspect <file>` | no | Everything the bundle will do, computed **from the actual bytes**: entries, origin OS, executables, instruction files, mcpServers it wants, checksum, encryption state. |
+| `braingraft graft <file> [--apply]` | only with `--apply` | Dry-run plan by default. Per-file verdict table. Staged writes + journal. `settings.json` merged by key policy. mcpServers/plugins never auto-enabled. |
+| `braingraft undo` | yes | Reverts the last graft from the journal. |
+| `braingraft sync push\|pull [--remote url]` | push: remote; pull: local | Git-backed ongoing sync over the same sanitizer. Hard-refuses a **public** remote. |
 
 `--json` on every command. Exit codes: `0` ok, `1` error, `2` findings.
 
@@ -63,7 +63,7 @@ Grafting writes hooks Claude Code **executes**, instruction files that **steer t
 - Decompression caps: max total bytes, max entries, max single entry — abort before writing (gzip bomb).
 - The manifest is **advisory**. Consent output is computed from the actual extracted bytes.
 - Every executable (`#!`, `.sh`, `.ps1`, `.cjs`, `.py`) and every instruction file (`CLAUDE.md`, `skills/**`, `agents/**`, `commands/**`) is **listed** before apply. A bundle whose origin fingerprint ≠ this machine requires an explicit `--trust`.
-- `mcpServers` and plugins from a bundle **never** merge into an executable position. They land in `.claudeport/pending-mcp.json` with the exact commands printed for the user to run by hand.
+- `mcpServers` and plugins from a bundle **never** merge into an executable position. They land in `.braingraft/pending-mcp.json` with the exact commands printed for the user to run by hand.
 - Pack: `lstat`-only walk (a symlink to `/etc/passwd` must never have its *contents* embedded); URLs carrying embedded credentials (`https://ghp_x@github.com/...`) are blocked, not redacted.
 - Crypto (`--encrypt`): AES-256-GCM, single-shot over the whole compressed archive (a 512 MB hard cap makes buffering safe and rules out a hand-rolled streaming AEAD). scrypt N=2^17, r=8, p=1, fresh 32-byte salt, fresh 12-byte nonce, both in the cleartext header. The header is bound into the **AAD**. Tag verified before a single byte is written. One generic `decryption failed` for wrong-passphrase / corruption / tampering (no oracle). No silent plaintext downgrade.
 - `sync`: the remote's **actual visibility is queried before every push** (not once at init); a public repo is a hard refusal; the expected remote is pinned in local state so a silently repointed remote is refused too.
@@ -72,7 +72,7 @@ Grafting writes hooks Claude Code **executes**, instruction files that **steer t
 ## 5. Layout
 
 ```
-bin/claudeport.mjs      arg parse, dispatch, exit codes
+bin/braingraft.mjs      arg parse, dispatch, exit codes
 src/brand.mjs           product name in one place (rename = one constant)
 src/env.mjs             home, claudeDir, platform, encodeProjectDir()
 src/walk.mjs            lstat walk, link classify, cycle guard, size caps
@@ -81,7 +81,7 @@ src/tar.mjs             minimal ustar reader/writer + hardened extraction valida
 src/container.mjs       .brain container: magic, cleartext header (AAD), gzip, optional GCM
 src/crypto.mjs          scrypt + AES-256-GCM
 src/manifest.mjs        build / verify (recompute hashes from bytes)
-src/rewrite.mjs         home ⇄ ${CLAUDEPORT_HOME}; EOL; exec-bit inference
+src/rewrite.mjs         home ⇄ ${BRAINGRAFT_HOME}; EOL; exec-bit inference
 src/memory.mjs          lift projects/<enc>/memory → memory/<scope>; land re-encoded
 src/settings.mjs        KEY_POLICY table, deep merge, hook dedupe
 src/scan.mjs            structural redaction (authoritative) + regex/entropy warnings
@@ -101,7 +101,7 @@ The post is not "I made a sync tool" (a category rejected six times on HN, recei
 
 > **Your Claude Code memory silently stops loading when you switch machines. Here's a read-only one-liner that shows whether it's happening to you.**
 
-`npx claudeport doctor` → *"⚠ 61 KB of memory in a namespace Claude cannot see on this machine."* Cite #25739. Post to r/ClaudeAI first. The tool is the fix offered *after* the diagnosis lands.
+`npx braingraft doctor` → *"⚠ 61 KB of memory in a namespace Claude cannot see on this machine."* Cite #25739. Post to r/ClaudeAI first. The tool is the fix offered *after* the diagnosis lands.
 
 ## 8. Non-goals
 

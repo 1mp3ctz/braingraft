@@ -3,13 +3,13 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 export function home() {
-  return process.env.CLAUDEPORT_HOME
-    ? path.resolve(process.env.CLAUDEPORT_HOME)
-    : os.homedir();
+  const override = process.env.BRAINGRAFT_HOME ?? process.env.CLAUDEPORT_HOME;
+  return override ? path.resolve(override) : os.homedir();
 }
 
 export function claudeDir() {
-  if (process.env.CLAUDEPORT_CLAUDE_DIR) return path.resolve(process.env.CLAUDEPORT_CLAUDE_DIR);
+  const override = process.env.BRAINGRAFT_CLAUDE_DIR ?? process.env.CLAUDEPORT_CLAUDE_DIR;
+  if (override) return path.resolve(override);
   if (process.env.CLAUDE_CONFIG_DIR) return path.resolve(process.env.CLAUDE_CONFIG_DIR);
   return path.join(home(), '.claude');
 }

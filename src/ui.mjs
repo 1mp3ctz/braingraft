@@ -73,9 +73,10 @@ export async function confirm(question, { assumeYes = false } = {}) {
 }
 
 export async function askPassphrase(prompt = 'Passphrase: ') {
-  if (process.env.CLAUDEPORT_PASSPHRASE) return process.env.CLAUDEPORT_PASSPHRASE;
+  const envPass = process.env.BRAINGRAFT_PASSPHRASE ?? process.env.CLAUDEPORT_PASSPHRASE;
+  if (envPass) return envPass;
   if (!process.stdin.isTTY) {
-    throw new Error('a passphrase is required; set CLAUDEPORT_PASSPHRASE or run in a terminal');
+    throw new Error('a passphrase is required; set BRAINGRAFT_PASSPHRASE or run in a terminal');
   }
   process.stdout.write(prompt);
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });

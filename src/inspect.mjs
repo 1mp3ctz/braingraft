@@ -4,6 +4,7 @@ import { LIMITS, unpack, validateEntries } from './tar.mjs';
 import { MANIFEST_PATH, parseManifest, verifyAgainstBytes } from './manifest.mjs';
 import { isExecutable, isInstructionFile } from './classify.mjs';
 import { machineFingerprint, platform, homeNamespace } from './env.mjs';
+import { STATE_DIR } from './brand.mjs';
 import { bytes, c, heading, sym, table } from './ui.mjs';
 
 export function load(file, { passphrase = null } = {}) {
@@ -85,7 +86,7 @@ export async function inspect(file, { passphrase = null, json = false } = {}) {
   }
   if (mcp.length) {
     process.stdout.write(`\n${c.yellow('  MCP servers it asks for:')} ${mcp.join(', ')}\n`);
-    process.stdout.write(c.gray('  These land in .claudeport/pending-mcp.json. Claudeport never writes them into settings.json.\n'));
+    process.stdout.write(c.gray(`  These land in ${STATE_DIR}/pending-mcp.json. Braingraft never writes them into settings.json.\n`));
   }
 
   if (problems.length) {

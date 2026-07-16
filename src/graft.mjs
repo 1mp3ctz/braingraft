@@ -154,7 +154,7 @@ export async function graft(file, {
   if (stale) {
     process.stderr.write(
       `${sym.bad} ${c.red('A previous graft did not finish')} (${stale.id}, status ${stale.status}).\n` +
-      `  Run ${c.bold('claudeport undo')} first — it will roll it back from the journal.\n`
+      `  Run ${c.bold('braingraft undo')} first — it will roll it back from the journal.\n`
     );
     return 1;
   }
@@ -238,7 +238,7 @@ export async function graft(file, {
       c.gray(`  ${instructions.length} instruction file(s) steer the model on every prompt — no scanner can tell a\n`) +
       c.gray('  malicious instruction from a legitimate one.\n') +
       (isForeign ? c.yellow('  The bundle also claims a different origin machine than this one.\n') : '') +
-      `  ${sym.arrow} Read them first: ${c.bold(`claudeport inspect ${path.basename(file)}`)}\n`
+      `  ${sym.arrow} Read them first: ${c.bold(`braingraft inspect ${path.basename(file)}`)}\n`
     );
     if (apply && !trust) {
       process.stderr.write(
@@ -257,7 +257,7 @@ export async function graft(file, {
   }
 
   if (!apply) {
-    process.stdout.write(`\n  ${sym.arrow} Nothing was written. Run it for real: ${c.bold(`claudeport graft ${path.basename(file)} --apply`)}\n\n`);
+    process.stdout.write(`\n  ${sym.arrow} Nothing was written. Run it for real: ${c.bold(`braingraft graft ${path.basename(file)} --apply`)}\n\n`);
     return 0;
   }
 
@@ -291,6 +291,6 @@ export async function graft(file, {
   if (notes.envExample) {
     process.stdout.write(`  ${sym.info} Redacted values are listed in ${c.bold(`${STATE_DIR}/env.example`)} — set them as environment variables.\n`);
   }
-  process.stdout.write(`\n  ${sym.arrow} Changed your mind? ${c.bold('claudeport undo')} restores this machine exactly.\n\n`);
+  process.stdout.write(`\n  ${sym.arrow} Changed your mind? ${c.bold('braingraft undo')} restores this machine exactly.\n\n`);
   return 0;
 }

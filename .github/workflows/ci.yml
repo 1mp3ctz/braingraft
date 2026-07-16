@@ -23,4 +23,4 @@ jobs:
       - name: Run tests
         run: node --test
       - name: Smoke test the CLI
-        run: node bin/claudeport.mjs --version
+        run: node bin/braingraft.mjs --version

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { BUNDLE_EXT, VERSION } from './brand.mjs';
+import { BUNDLE_EXT, VERSION, NAME, IGNORE_FILE, LEGACY_IGNORE_FILE } from './brand.mjs';
 import { claudeDir, home, homeNamespace, platform } from './env.mjs';
 import { walk } from './walk.mjs';
 import { BRAIN, MEMORY, SECRET, classify, isExecutable, isInstructionFile, memoryNamespaceOf } from './classify.mjs';
@@ -17,14 +17,16 @@ import { bytes, c, confirm, heading, sym, table } from './ui.mjs';
 const MAX_FILE = 16 * 1024 * 1024;
 
 function loadIgnore(dir) {
-  const file = path.join(dir, '.claudeportignore');
   let patterns = [];
-  try {
-    patterns = fs.readFileSync(file, 'utf8')
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith('#'));
-  } catch { /* none */ }
+  for (const name of [IGNORE_FILE, LEGACY_IGNORE_FILE]) {
+    try {
+      patterns = fs.readFileSync(path.join(dir, name), 'utf8')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#'));
+      if (patterns.length) break;
+    } catch { /* try next */ }
+  }
   return (rel) => patterns.some((p) => matchGlob(rel, p));
 }
 
@@ -217,7 +219,7 @@ export function build({ dir = claudeDir(), h = home(), includeMemory = true } = 
 
   const mem = diagnose(dir, h);
   const origin = {
-    tool: `claudeport/${VERSION}`,
+    tool: `braingraft/${VERSION}`,
     os: platform(),
     namespace: homeNamespace(h),
     memoryNamespaces: mem.namespaces.map((n) => ({ ns: n.ns, files: n.files, bytes: n.bytes, os: n.os })),
@@ -333,6 +335,6 @@ export async function pack({ out, encrypt = false, passphrase = null, includeMem
     process.stdout.write(`  ${sym.warn} ${notes.memoryConflicts.length} memory file(s) existed in more than one namespace; kept the active machine's copy.\n`);
   }
 
-  process.stdout.write(`\n  ${sym.arrow} On the other machine: ${c.bold(`claudeport graft ${path.basename(target)}`)}\n\n`);
+  process.stdout.write(`\n  ${sym.arrow} On the other machine: ${c.bold(`braingraft graft ${path.basename(target)}`)}\n\n`);
   return 0;
 }
