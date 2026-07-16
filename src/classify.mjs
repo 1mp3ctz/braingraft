@@ -82,7 +82,7 @@ export function isInstructionFile(rel) {
   return /^(skills|agents|commands|rules|output-styles)\//.test(rel) && /\.(md|markdown)$/i.test(rel);
 }
 
-const EXEC_EXT = /\.(sh|bash|zsh|ps1|bat|cmd|py|rb|pl|mjs|cjs|js)$/i;
+const EXEC_EXT = /\.(sh|bash|zsh|command|ps1|bat|cmd|py|rb|pl|mjs|cjs|js)$/i;
 
 export function isExecutable(rel, contents) {
   if (/^(hooks|scripts|helpers)\//.test(rel) && EXEC_EXT.test(rel)) return true;

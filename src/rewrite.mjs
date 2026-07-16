@@ -1,4 +1,5 @@
 import { HOME_TOKEN } from './brand.mjs';
+import { isExecutable } from './classify.mjs';
 
 const TEXT_EXT = /\.(md|markdown|json|jsonc|sh|bash|zsh|ps1|bat|cmd|py|rb|pl|mjs|cjs|js|ts|tsx|jsx|toml|yaml|yml|txt|css|html|xml|ini|cfg|rc|env\.example)$/i;
 const TEXT_BASENAMES = new Set(['CLAUDE.md', 'AGENTS.md', '.claudeportrc', '.claudeportignore', '.gitignore']);
@@ -64,11 +65,8 @@ export function normalizeEol(text) {
   return { text: crlf ? text.replace(/\r\n/g, '\n') : text, eol: crlf ? 'crlf' : 'lf' };
 }
 
-const SHEBANG = 0x23;
-
 export function inferExec(rel, buf) {
-  if (buf && buf.length > 1 && buf[0] === SHEBANG && buf[1] === 0x21) return true;
-  return /\.(sh|bash|zsh|command|py|rb|pl)$/i.test(rel);
+  return isExecutable(rel, buf);
 }
 
 export function lineOf(text, index) {

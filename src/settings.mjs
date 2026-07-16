@@ -15,7 +15,7 @@ export const SHARED_KEYS = new Set([
   'alwaysThinkingEnabled', 'spinnerTipsEnabled', 'disabledMcpjsonServers', 'enabledMcpjsonServers'
 ]);
 
-export const REDACT_KEYS = new Set(['env']);
+export const REDACT_KEYS = new Set(['env', 'headers']);
 export const QUARANTINE_KEYS = new Set(['mcpServers', 'enabledPlugins', 'extraKnownMarketplaces']);
 
 const SECRETISH = /(key|token|secret|auth|password|passwd|credential|cookie|session)/i;
@@ -35,7 +35,7 @@ export function sanitizeSettings(settings) {
       continue;
     }
     if (REDACT_KEYS.has(key)) {
-      const [redacted, vars] = redactObject(value, key);
+      const [redacted, vars] = redactSecretDict(value, key);
       if (Object.keys(redacted ?? {}).length) shared[key] = redacted;
       redactions.push(...vars.map((v) => `${key}.${v}`));
       for (const v of vars) envExample[envVarName(key, v)] = '';
@@ -58,6 +58,21 @@ export function sanitizeSettings(settings) {
   }
 
   return { shared, quarantined, local, unknown, redactions, envExample, foreign: [...new Set(foreign)] };
+}
+
+function redactSecretDict(value, key) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return [{}, []];
+  const vars = [];
+  const out = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (typeof v === 'string' && v.startsWith('${')) {
+      out[k] = v;
+      continue;
+    }
+    vars.push(k);
+    out[k] = `\${${envVarName(key, k)}}`;
+  }
+  return [out, vars];
 }
 
 function envVarName(prefix, dotted) {

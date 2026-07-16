@@ -14,7 +14,27 @@ import { bytes, c, confirm, heading, sym, table } from './ui.mjs';
 const BRAIN_SUBDIR = 'brain';
 
 function git(args, cwd) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  return execFileSync(
+    'git',
+    ['-c', 'protocol.ext.allow=never', '-c', 'protocol.fd.allow=never', '-c', 'protocol.file.allow=user', ...args],
+    {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, GIT_ALLOW_PROTOCOL: 'https:ssh:git' }
+    }
+  ).trim();
+}
+
+const SAFE_REMOTE = /^(https:\/\/|git@[a-z0-9.-]+:|ssh:\/\/)/i;
+
+export function assertSafeRemote(remote) {
+  if (typeof remote !== 'string' || !SAFE_REMOTE.test(remote) || /[\r\n\0]/.test(remote)) {
+    throw new Error(
+      `refusing remote ${JSON.stringify(remote)} — only https://, ssh://, and git@host: URLs are allowed`
+    );
+  }
+  return remote;
 }
 
 export function syncStatePath(dir = claudeDir()) {
@@ -35,7 +55,7 @@ function writeSyncState(state, dir = claudeDir()) {
 }
 
 export function parseGitHub(remote) {
-  const m = remote.match(/github\.com[:/]([^/]+)\/([^/.]+)(?:\.git)?$/i);
+  const m = remote.match(/^(?:https:\/\/|git@|ssh:\/\/git@)github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?\/?$/i);
   return m ? { owner: m[1], repo: m[2] } : null;
 }
 
@@ -59,6 +79,7 @@ function repoDir() {
 }
 
 function ensureRepo(remote) {
+  assertSafeRemote(remote);
   const dir = repoDir();
   fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(path.join(dir, '.git'))) {
@@ -87,6 +108,12 @@ export async function push({ remote = null, yes = false, allowUnverifiedRemote =
   if (!target) {
     process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('claudeport sync push --remote <git-url>')}\n`);
     return 1;
+  }
+  try {
+    assertSafeRemote(target);
+  } catch (err) {
+    process.stderr.write(`${sym.bad} ${c.red(err.message)}\n`);
+    return 2;
   }
 
   if (state?.remote && remote && remote !== state.remote) {
@@ -177,6 +204,12 @@ export async function pull({ remote = null, apply = false, yes = false, trust = 
   if (!target) {
     process.stderr.write(`${sym.bad} no remote configured. Run: ${c.bold('claudeport sync pull --remote <git-url>')}\n`);
     return 1;
+  }
+  try {
+    assertSafeRemote(target);
+  } catch (err) {
+    process.stderr.write(`${sym.bad} ${c.red(err.message)}\n`);
+    return 2;
   }
 
   const repo = ensureRepo(target);

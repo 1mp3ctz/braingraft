@@ -7,7 +7,7 @@
 Diagnose what's silently broken, pack it, graft it — safely, reversibly, with zero dependencies.
 
 [![CI](https://github.com/1mp3ctz/claudeport/actions/workflows/ci.yml/badge.svg)](https://github.com/1mp3ctz/claudeport/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](test/)
+[![tests](https://img.shields.io/badge/tests-100%20passing-brightgreen)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-blue)](package.json)
 [![node](https://img.shields.io/badge/node-%E2%89%A518.17-339933?logo=node.js&logoColor=white)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
@@ -138,7 +138,7 @@ schtasks /create /tn claudeport-sync /sc weekly /d SUN /st 09:00 /tr "npx github
 ```bash
 git clone https://github.com/1mp3ctz/claudeport
 cd claudeport
-npm test          # 94 tests, stdlib only, no install needed
+npm test          # 100 tests, stdlib only, no install needed
 ```
 
 No build step. No dependencies. `src/` is plain ES modules you can read in an afternoon.
