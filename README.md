@@ -1,9 +1,26 @@
-# Claudeport
+<div align="center">
 
-**Your Claude Code brain, on every machine.** Diagnose what's silently broken, pack it, graft it — safely, reversibly, with zero dependencies.
+# 🧠 Claudeport
+
+**Your Claude Code brain, on every machine.**
+
+Diagnose what's silently broken, pack it, graft it — safely, reversibly, with zero dependencies.
+
+[![CI](https://github.com/1mp3ctz/claudeport/actions/workflows/ci.yml/badge.svg)](https://github.com/1mp3ctz/claudeport/actions/workflows/ci.yml)
+[![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](test/)
+[![dependencies](https://img.shields.io/badge/dependencies-0-blue)](package.json)
+[![node](https://img.shields.io/badge/node-%E2%89%A518.17-339933?logo=node.js&logoColor=white)](package.json)
+[![license](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
+
+<a href="https://1mp3ctz.github.io/claudeport/">Landing page</a> ·
+<a href="#the-problem-nobody-tells-you-about">The bug</a> ·
+<a href="#how-it-works">How it works</a> ·
+<a href="SECURITY.md">Threat model</a>
+
+</div>
 
 ```bash
-npx claudeport doctor
+npx github:1mp3ctz/claudeport doctor
 ```
 
 > Not affiliated with Anthropic. "Claude" is a trademark of Anthropic, PBC. Claudeport is a compatible third-party tool that reads and writes your local Claude Code configuration.
@@ -80,11 +97,14 @@ See [SECURITY.md](SECURITY.md) for the full threat model.
 ## Install
 
 ```bash
-npx claudeport <command>          # no install
-npm install -g claudeport         # or global
+npx github:1mp3ctz/claudeport <command>   # no install — runs straight from this repo
 ```
 
+Or clone it and run `node bin/claudeport.mjs <command>` — there is no build step and nothing to install.
+
 Requires Node 18.17+. Works identically on Windows, macOS, and Linux.
+
+> **Heads-up:** the `claudeport` name on npm belongs to a different, unrelated project. `npx claudeport` runs *their* code, not this one — always use the `github:` form above.
 
 ## Commands
 
@@ -105,12 +125,12 @@ Claudeport does not write to your system scheduler. Wire it up yourself in one l
 
 ```bash
 # cron (macOS/Linux) — Sundays at 9am
-0 9 * * 0  cd ~ && npx claudeport sync push >> ~/.claudeport/sync.log 2>&1
+0 9 * * 0  cd ~ && npx github:1mp3ctz/claudeport sync push >> ~/.claudeport/sync.log 2>&1
 ```
 
 ```powershell
 # Windows Task Scheduler
-schtasks /create /tn claudeport-sync /sc weekly /d SUN /st 09:00 /tr "npx claudeport sync push"
+schtasks /create /tn claudeport-sync /sc weekly /d SUN /st 09:00 /tr "npx github:1mp3ctz/claudeport sync push"
 ```
 
 ## Development
@@ -118,7 +138,7 @@ schtasks /create /tn claudeport-sync /sc weekly /d SUN /st 09:00 /tr "npx claude
 ```bash
 git clone https://github.com/1mp3ctz/claudeport
 cd claudeport
-npm test          # 93 tests, stdlib only, no install needed
+npm test          # 94 tests, stdlib only, no install needed
 ```
 
 No build step. No dependencies. `src/` is plain ES modules you can read in an afternoon.

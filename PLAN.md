@@ -95,7 +95,7 @@ test/*.test.mjs         node:test; golden fake-.claude fixtures (posix/win/junct
 
 `node:test`, stdlib only. **The author's real `~/.claude` is never written to by any test** — fixtures build a fake tree in a temp dir and `CLAUDEPORT_HOME` points at it. Coverage targets the dangerous paths: extraction hardening (zip-slip, bombs, bad types), secret scanner (no false negatives on known prefixes), path rewriter (round-trip idempotence), memory remapper (mac↔win↔linux matrix), settings merge (LOCAL keys never move, hooks never duplicate), crypto (tamper → generic failure), graft (undo restores byte-identically). CI: ubuntu + macos + windows × node 20.
 
-## 7. Launch (Viktor's call — repo stays private until he says so)
+## 7. Launch
 
 The post is not "I made a sync tool" (a category rejected six times on HN, receipts in `AUDIT.md`). The post is the finding:
 

@@ -32,5 +32,14 @@
     "cli"
   ],
   "license": "MIT",
-  "private": true
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1mp3ctz/claudeport.git"
+  },
+  "homepage": "https://github.com/1mp3ctz/claudeport#readme",
+  "bugs": {
+    "url": "https://github.com/1mp3ctz/claudeport/issues"
+  },
+  "author": "Viktor (https://github.com/1mp3ctz)"
 }
