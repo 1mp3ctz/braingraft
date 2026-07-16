@@ -26,7 +26,7 @@ function git(args, cwd) {
   ).trim();
 }
 
-const SAFE_REMOTE = /^(https:\/\/|git@[a-z0-9.-]+:|ssh:\/\/)/i;
+const SAFE_REMOTE = /^(https:\/\/|git@[a-z0-9.-]+:|ssh:\/\/(?:[a-z0-9._-]+@)?[a-z0-9])/i;
 
 export function assertSafeRemote(remote) {
   if (typeof remote !== 'string' || !SAFE_REMOTE.test(remote) || /[\r\n\0]/.test(remote)) {

@@ -80,6 +80,8 @@ Encryption is not a substitute for the allowlist: a bundle is designed to be saf
 
 `sync push` queries the remote's **actual visibility before every push** and hard-refuses a public repository — a leaked private brain in public git history is permanent. The expected remote is pinned locally, so a silently repointed remote is refused too. Only GitHub visibility is auto-verified; any other host requires an explicit `--allow-unverified-remote` acknowledgement. The same secret scanner that gates `pack` gates every push. Paths in a pulled manifest are validated and root-confined before any file is read.
 
+**Remote URLs are transport-restricted.** Every remote — for `push` *and* `pull` — is validated against a scheme allowlist (`https://`, `ssh://`, `git@host:`) before it ever reaches `git`, and every `git` subprocess runs with `protocol.ext`/`protocol.fd` disabled and `GIT_ALLOW_PROTOCOL=https:ssh:git`. This closes git's `ext::`/`fd::` remote-helper transports, which would otherwise let a crafted `--remote` value execute an arbitrary command the moment git touched it. A malicious "pull my brain" one-liner cannot run code on your machine.
+
 ## What Claudeport is not
 
 It is not a sandbox and it does not vet the *intent* of instructions or hooks. It reduces the ways a bundle can surprise you and makes every change reversible; it cannot make an untrusted brain safe to run blindly. Read what you graft.
