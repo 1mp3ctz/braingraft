@@ -167,7 +167,16 @@ function unionArray(a = [], b = []) {
   return [...new Set([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])])];
 }
 
-export function mergeSettings(target = {}, incoming = {}) {
+function mergeQuarantinedValue(current, incoming) {
+  if (Array.isArray(incoming)) return unionArray(current, incoming);
+  if (incoming && typeof incoming === 'object') {
+    const base = current && typeof current === 'object' && !Array.isArray(current) ? current : {};
+    return { ...base, ...incoming };
+  }
+  return incoming;
+}
+
+export function mergeSettings(target = {}, incoming = {}, { allowQuarantined = false } = {}) {
   const merged = structuredClone(target);
   const report = [];
 
@@ -177,7 +186,12 @@ export function mergeSettings(target = {}, incoming = {}) {
       continue;
     }
     if (QUARANTINE_KEYS.has(key)) {
-      report.push({ key, action: 'quarantined' });
+      if (!allowQuarantined) {
+        report.push({ key, action: 'quarantined' });
+        continue;
+      }
+      merged[key] = mergeQuarantinedValue(target[key], value);
+      report.push({ key, action: 'applied-trusted' });
       continue;
     }
 

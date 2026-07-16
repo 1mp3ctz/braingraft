@@ -1,6 +1,6 @@
 {
   "name": "braingraft",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Your Claude Code brain, on every machine. Diagnose what's silently broken, pack it, graft it — safely, reversibly, zero dependencies.",
   "type": "module",
   "bin": {

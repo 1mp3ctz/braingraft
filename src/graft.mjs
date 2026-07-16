@@ -3,7 +3,7 @@ import path from 'node:path';
 import { STATE_DIR } from './brand.mjs';
 import { claudeDir, home, homeNamespace } from './env.mjs';
 import { landingPathFor } from './memory.mjs';
-import { detokenizeHome, inferExec } from './rewrite.mjs';
+import { detokenizeHome, findForeignPaths, inferExec } from './rewrite.mjs';
 import { localKeysPreserved, mergeSettings } from './settings.mjs';
 import { sha256 } from './crypto.mjs';
 import { Transaction, pendingRecovery } from './journal.mjs';
@@ -12,10 +12,10 @@ import { bytes, c, confirm, heading, sym, table } from './ui.mjs';
 
 const SPECIAL = new Set(['settings.json', 'mcp.lock.json', 'env.example']);
 
-export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = false }) {
+export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = false, trustMine = false }) {
   const ops = [];
   const skipped = [];
-  const notes = { mcp: null, envExample: null, settingsReport: [] };
+  const notes = { mcp: null, mcpApplied: null, mcpForeign: [], envExample: null, settingsReport: [] };
 
   for (const file of bundle.files) {
     if (SPECIAL.has(file.path)) continue;
@@ -57,15 +57,31 @@ export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = fal
     });
   }
 
-  const settingsFile = bundle.files.find((f) => f.path === 'settings.json');
-  if (settingsFile) {
-    const incomingText = detokenizeHome(settingsFile.data.toString('utf8'), h);
-    let incoming = null;
+  const lockFile = bundle.files.find((f) => f.path === 'mcp.lock.json');
+  let lockText = null;
+  let lockObj = null;
+  if (lockFile) {
+    lockText = detokenizeHome(lockFile.data.toString('utf8'), h);
     try {
-      incoming = JSON.parse(incomingText);
+      lockObj = JSON.parse(lockText);
     } catch {
-      skipped.push({ rel: 'settings.json', reason: 'bundle settings.json is not valid JSON' });
+      skipped.push({ rel: 'mcp.lock.json', reason: 'bundle mcp.lock.json is not valid JSON' });
     }
+  }
+  const applyLock = trustMine && lockObj !== null;
+
+  const settingsFile = bundle.files.find((f) => f.path === 'settings.json');
+  {
+    let incoming = null;
+    if (settingsFile) {
+      const incomingText = detokenizeHome(settingsFile.data.toString('utf8'), h);
+      try {
+        incoming = JSON.parse(incomingText);
+      } catch {
+        skipped.push({ rel: 'settings.json', reason: 'bundle settings.json is not valid JSON' });
+      }
+    }
+    if (applyLock) incoming = { ...(incoming ?? {}), ...lockObj };
     if (incoming) {
       const settingsPath = path.join(dir, 'settings.json');
       let current = {};
@@ -75,7 +91,7 @@ export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = fal
         current = JSON.parse(currentRaw);
       } catch { /* fresh machine or unreadable */ }
 
-      const { merged, report } = mergeSettings(current, incoming);
+      const { merged, report } = mergeSettings(current, incoming, { allowQuarantined: applyLock });
       notes.settingsReport = report;
 
       if (!localKeysPreserved(current, merged)) {
@@ -110,11 +126,14 @@ export function plan({ bundle, dir = claudeDir(), h = home(), preferTheirs = fal
     ops.push({ rel, action: 'quarantine', data, size: data.length });
   };
 
-  const mcpFile = bundle.files.find((f) => f.path === 'mcp.lock.json');
-  if (mcpFile) {
-    const text = detokenizeHome(mcpFile.data.toString('utf8'), h);
-    notes.mcp = text;
-    quarantine(`${STATE_DIR}/pending-mcp.json`, Buffer.from(text, 'utf8'));
+  if (lockText !== null) {
+    if (applyLock) {
+      notes.mcpApplied = lockObj;
+      notes.mcpForeign = findForeignPaths(lockText);
+    } else {
+      notes.mcp = lockText;
+      quarantine(`${STATE_DIR}/pending-mcp.json`, Buffer.from(lockText, 'utf8'));
+    }
   }
 
   const envFile = bundle.files.find((f) => f.path === 'env.example');
@@ -142,6 +161,7 @@ export async function graft(file, {
   apply = false,
   preferTheirs = false,
   trust = false,
+  trustMine = false,
   passphrase = null,
   yes = false,
   json = false,
@@ -175,8 +195,29 @@ export async function graft(file, {
     return 2;
   }
 
+  // --trust-mine lifts the MCP/plugin quarantine, so it MUST be backed by proof the
+  // bundle is really yours. The only such proof here is the AES-256-GCM auth tag: an
+  // encrypted bundle that reached this point decrypted under your passphrase, so it
+  // was sealed by someone holding it. A self-declared origin field would be spoofable
+  // by any attacker, so it is deliberately NOT used as the gate.
+  let trustedMine = false;
+  if (trustMine) {
+    if (!bundle.header?.encrypted) {
+      process.stderr.write(
+        `\n${sym.bad} ${c.red('--trust-mine needs an encrypted bundle.')}\n` +
+        c.gray('  It auto-enables MCP servers, which launch subprocesses on this machine, so it\n') +
+        c.gray('  requires proof the bundle is yours. A plaintext bundle carries no such proof —\n') +
+        c.gray('  its stated origin is just a field any author can write.\n') +
+        `  ${sym.arrow} Repack it on the source machine with ${c.bold('braingraft pack --encrypt')}, or graft without --trust-mine\n` +
+        c.gray(`    and add the servers by hand from ${STATE_DIR}/pending-mcp.json.\n\n`)
+      );
+      return 2;
+    }
+    trustedMine = true;
+  }
+
   const isForeign = foreignBundle(bundle.manifest);
-  const { ops, skipped, notes } = plan({ bundle, dir, h, preferTheirs });
+  const { ops, skipped, notes } = plan({ bundle, dir, h, preferTheirs, trustMine: trustedMine });
   const s = summarizeOps(ops);
   const memoryOps = ops.filter((o) => o.rel.includes('/memory/'));
 
@@ -227,7 +268,7 @@ export async function graft(file, {
 
   const execs = bundle.observed.filter((o) => o.exec);
   const instructions = bundle.observed.filter((o) => o.instruction);
-  const requestsMcp = (bundle.manifest.locks?.mcp ?? []).length > 0 || Boolean(notes.mcp);
+  const requestsMcp = (bundle.manifest.locks?.mcp ?? []).length > 0 || Boolean(notes.mcp) || Boolean(notes.mcpApplied);
   const carriesCode = execs.length > 0 || instructions.length > 0 || requestsMcp;
 
   if (carriesCode) {
@@ -240,7 +281,7 @@ export async function graft(file, {
       (isForeign ? c.yellow('  The bundle also claims a different origin machine than this one.\n') : '') +
       `  ${sym.arrow} Read them first: ${c.bold(`braingraft inspect ${path.basename(file)}`)}\n`
     );
-    if (apply && !trust) {
+    if (apply && !trust && !trustedMine) {
       process.stderr.write(
         `\n${sym.bad} ${c.red('Refusing to apply without --trust.')} ${c.gray('This bundle runs code and loads instructions on this machine.')}\n` +
         c.gray(`  If you have reviewed it, re-run with ${c.bold('--trust')}.\n\n`)
@@ -284,6 +325,21 @@ export async function graft(file, {
     process.stdout.write(`  ${sym.warn} ${refused.length} refused: the path is a symlink pointing outside your Claude directory.\n`);
     process.stdout.write(c.gray('    Pass --allow-external-links if that is genuinely what you want.\n'));
   }
+  if (notes.mcpApplied) {
+    const names = Object.keys(notes.mcpApplied.mcpServers ?? {});
+    process.stdout.write(
+      `\n  ${sym.warn} ${c.yellow('--trust-mine: MCP servers, plugins, and marketplaces were ENABLED')} ${c.gray('(bundle authenticated by your passphrase).')}\n`
+    );
+    if (names.length) process.stdout.write(c.gray(`    servers: ${names.join(', ')}\n`));
+    if (notes.mcpForeign.length) {
+      process.stdout.write(
+        `  ${sym.bad} ${c.red('These point at another machine\'s filesystem and will not resolve here:')}\n`
+      );
+      for (const p of notes.mcpForeign.slice(0, 10)) process.stdout.write(`    ${c.yellow(p)}\n`);
+      process.stdout.write(c.gray('    Fix the paths in settings.json, or run braingraft undo.\n'));
+    }
+  }
+
   if (notes.mcp) {
     process.stdout.write(`\n  ${sym.warn} ${c.yellow('MCP servers, plugins, and marketplaces were NOT enabled.')} They are in ${c.bold(`${STATE_DIR}/pending-mcp.json`)}.\n`);
     process.stdout.write(c.gray('    Each one runs code or grants a plugin source. Review them, then add the ones you trust to settings.json yourself.\n'));

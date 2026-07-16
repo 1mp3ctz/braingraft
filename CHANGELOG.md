@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0
+
+**New: `graft --trust-mine`.** Moving between machines you own, this enables the
+bundle's `mcpServers` / `enabledPlugins` / `extraKnownMarketplaces` instead of
+quarantining them to `pending-mcp.json`.
+
+It requires an **encrypted** bundle. Enabling an MCP server launches a subprocess, so
+the flag needs proof the bundle is yours, and the AES-256-GCM auth tag is that proof:
+if it decrypts under your passphrase, someone holding your passphrase sealed it. The
+bundle's self-declared origin machine is *not* used as the gate — any author can write
+that field, so trusting it would reintroduce the spoofable-trust bug fixed in 0.2.0.
+`--trust-mine` on a plaintext bundle is refused.
+
+Unchanged under the flag: secrets stay redacted to `${VAR}`, machine-local keys never
+move, existing servers are merged rather than clobbered, foreign absolute paths are
+reported, and the write is still a dry run without `--apply` and reversible with `undo`.
+
 ## 0.2.0
 
 **Renamed `claudeport` → `braingraft`.** The npm name `claudeport` belongs to an

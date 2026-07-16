@@ -64,6 +64,21 @@ Decompression is capped by total bytes, entry count, and per-entry size to defea
 ### The trust gate is not spoofable
 A bundle that carries executables, instruction files, or MCP requests **cannot be applied without `--trust`**. This requirement is derived from the archive's real contents, not from a self-declared "origin" field a bundle author controls.
 
+### `--trust-mine`: lifting the MCP quarantine for your own machines
+
+Moving a brain between machines *you* own, the quarantine is friction — you wrote those MCP servers. `graft --trust-mine` enables the bundle's `mcpServers`, `enabledPlugins`, and `extraKnownMarketplaces` instead of parking them in `pending-mcp.json`.
+
+Because enabling an MCP server means launching a subprocess, this flag demands **proof the bundle is actually yours**, and there is exactly one thing here that can prove it: **the bundle must be encrypted**. `pack --encrypt` seals it with AES-256-GCM; a bundle that decrypts under your passphrase was, by the authentication tag, sealed by someone holding that passphrase. `--trust-mine` on a plaintext bundle is **refused**, not warned about.
+
+What it deliberately does **not** trust is the bundle's stated origin machine. That field is written by whoever built the bundle, so a hostile bundle can simply claim to be yours — gating on it would be security theatre. Authenticity comes from the crypto or not at all.
+
+Even under `--trust-mine`:
+
+- **Secrets still do not travel.** `env`/`headers` values remain `${VAR}` references; you get the server definition, never the token.
+- **Machine-local keys still never move**, and your existing servers are merged with, not clobbered by, the bundle's.
+- **Foreign absolute paths are reported.** A command pointing at the source machine's filesystem cannot work here, so it is listed loudly rather than written silently.
+- **It is still a dry run without `--apply`, still journaled, and still reversible with `undo`.**
+
 ### Writes are reversible
 `graft --apply` stages every write, records a journal (with a pre-write snapshot of anything it overwrites), then commits. `braingraft undo` replays the journal in reverse and restores the machine byte-for-byte. An interrupted graft is detected on the next run.
 

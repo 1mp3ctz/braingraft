@@ -29,6 +29,8 @@ ${c.bold('FLAGS')}
   --apply                    Actually write (graft/sync pull).
   --theirs                   On conflict, take the bundle's version.
   --trust                    Acknowledge that a foreign bundle runs code here.
+  --trust-mine               Your own bundle: also enable its MCP servers/plugins.
+                             Requires an encrypted bundle (proves it is yours).
   --yes                      Skip confirmation prompts.
   --remote <git-url>         Remote for sync.
   --allow-unverified-remote  Push to a non-GitHub remote you swear is private.
@@ -125,6 +127,7 @@ async function main() {
         apply: Boolean(flags.apply),
         preferTheirs: Boolean(flags.theirs),
         trust: Boolean(flags.trust),
+        trustMine: Boolean(flags.trustMine),
         allowExternalLinks: Boolean(flags.allowExternalLinks),
         passphrase: await maybePassphrase(file),
         yes,

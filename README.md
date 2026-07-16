@@ -90,7 +90,7 @@ A bundle you receive is, by design, code someone else's Claude will run (hooks) 
 - **Dry run by default.** `graft` shows a per-file plan and writes nothing until you pass `--apply`.
 - **Reversible.** Every apply is staged, journaled, and snapshotted. `braingraft undo` restores the machine byte-for-byte.
 - **Consent from bytes, not claims.** `inspect` and `graft` compute what a bundle will do from its actual contents, never from its manifest's self-description. A bundle that carries executables or instruction files cannot be applied without `--trust`, and the files are listed for you first.
-- **MCP servers and plugins are quarantined.** They are never auto-enabled; they land in `.braingraft/pending-mcp.json` with the commands printed, for you to add by hand.
+- **MCP servers and plugins are quarantined.** They are never auto-enabled; they land in `.braingraft/pending-mcp.json` with the commands printed, for you to add by hand. Moving between *your own* machines, `graft --trust-mine` lifts this — but only for an **encrypted** bundle, because decrypting it under your passphrase is what proves it is yours (see below).
 - **Hardened extraction.** Path traversal, absolute paths, symlink/device entries, decompression bombs, Windows-reserved names, and case-collisions are all rejected before a single byte is written.
 - **Optional encryption.** `pack --encrypt` seals the bundle with AES-256-GCM (scrypt-derived key) for transport on a USB stick.
 
@@ -115,7 +115,7 @@ Requires Node 18.17+. Works identically on Windows, macOS, and Linux.
 | `doctor` | no | Diagnose this machine. Start here. |
 | `pack [-o file] [--encrypt] [--no-memory]` | no | Build a portable bundle. |
 | `inspect <file>` | no | Show exactly what a bundle would do. |
-| `graft <file> [--apply] [--theirs] [--trust]` | with `--apply` | Install a bundle. Dry run by default. |
+| `graft <file> [--apply] [--theirs] [--trust] [--trust-mine]` | with `--apply` | Install a bundle. Dry run by default. |
 | `undo` | yes | Roll back the last graft. |
 | `sync push \| pull [--remote url]` | push: remote | Git-backed sync with a private repo. |
 
